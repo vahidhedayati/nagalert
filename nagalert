@@ -46,9 +46,13 @@ case "$1" in
 		wget -O - -q -t 1 "$url" >/dev/null 2>&1
 		;;
   stop)
-        	echo "Disabling Nagios Alerts for $HOST_NAME for $input_time";
-		url="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=86&cmd_mod=2&host=$HOST_NAME&com_data=automated_stop_using_init.d&trigger=0&start_time=$now&end_time=$end&fixed=1&hours=0&minutes=0&btnSubmit=Commit"
-		wget -O - -q -t 1 "$url" >/dev/null 2>&1
+		# Whilst host is scheduled down this message will appear in link called downtime on the left hand nagios admin menu
+		person=$(getent  passwd $(logname)|awk -F":" '{print $5}')
+                userlogin=$(logname);
+                message="$userlogin aka $person Disabled Nagios Alerts for $HOST_NAME for $input_time";
+                echo $message
+                url="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=86&cmd_mod=2&host=$HOST_NAME&com_author=nagiosadmin&com_data=$message&trigger=0&start_time=$now&end_time=$end&fixed=1&hours=0&minutes=0&btnSubmit=Commit"
+        	wget -O - -q -t 1 "$url" >/dev/null 2>&1
 		 ;;
   *)
 	usage
