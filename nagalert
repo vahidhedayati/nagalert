@@ -60,20 +60,28 @@ function usage() {
 
 case "$1" in
   start)
-          echo "Enabling Nagios Alerts for $HOST_NAME";
+        	echo "Enabling Nagios Alerts for $HOST_NAME";
 		url="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=17&cmd_mod=2&host=$HOST_NAME&start_time=$now&btnSubmit=Commit"
 		wget -O - -q -t 1 "$url" >/dev/null 2>&1
 		;;
   stop)
-		# Whilst host is scheduled down this message will appear in link called downtime on the left hand nagios admin menu
 		person=$(getent  passwd $(logname)|awk -F":" '{print $5}')
                 userlogin=$(logname);
-                message="$userlogin aka $person Disabled Nagios Alerts for $HOST_NAME for $input_time";
+		
+		#Disable services for defined time
+                message="$userlogin aka $person Disabled Nagios SERVICE Alerts for $HOST_NAME for $input_time";
                 echo $message
-                url="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=86&cmd_mod=2&host=$HOST_NAME&com_author=nagiosadmin&com_data=$message&trigger=0&start_time=$now&end_time=$end&fixed=1&hours=0&minutes=0&btnSubmit=Commit"
-        	wget -O - -q -t 1 "$url" >/dev/null 2>&1
+		url="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=86&cmd_mod=2&host=$HOST_NAME&com_data=$message&trigger=0&start_time=$now&end_time=$end&fixed=1&hours=0&minutes=0&btnSubmit=Commit"
+		wget -O - -q -t 1 "$url" >/dev/null 2>&1
+	
+		#Disable host alerts for defined time
+		message="$userlogin aka $person Disabled Nagios HOST Alert for $HOST_NAME for $input_time";
+                echo $message
+		url1="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=55&cmd_mod=2&host=$HOST_NAME&com_data=$message&trigger=0&start_time=$now&end_time=$end&fixed=1&hours=0&minutes=0&childoptions=0&btnSubmit=Commit"
+		wget -O - -q -t 1 "$url1" >/dev/null 2>&1
 		 ;;
   *)
+
 	usage
 	exit 1
 esac
