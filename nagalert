@@ -30,6 +30,12 @@ if [ "$input_time" == "" ]; then
 input_time=10M
 fi
 
+HOST_NAME=$3;
+if [ "$HOST_NAME" == "" ]; then
+	HOST_NAME=(`hostname -s`)
+fi
+
+
 if [[ $input_time =~ D ]]; then
         input_time=$(echo $input_time|sed -e 's/D/ days/g')
 elif [[ $input_time =~ M ]]; then
@@ -43,7 +49,7 @@ fi
 amp="%%3A"
 now=$(date +%m-%d-%Y"+"%H$amp%M$amp%S)
 end=$(date +%m-%d-%Y"+"%H$amp%M$amp%S  -d "$input_time")
-HOST_NAME=(`hostname -s`)
+
 
 
 function usage() { 
