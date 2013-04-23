@@ -71,8 +71,17 @@ case "$1" in
 		wget -O - -q -t 1 "$url" >/dev/null 2>&1
 		;;
   stop)
-		person=$(getent  passwd $(logname)|awk -F":" '{print $5}')
-                userlogin=$(logname);
+		# If executed via crontab - logname will not have a value - this stops the script from working
+		# it now checks - if there is no value it will default user as root
+		echo $(logname)  | grep "[a-z]" > /dev/null
+                if [ $? = 0 ]; then
+                        loginname=$(logname);
+                else
+                        loginname="root";
+                fi
+
+                person=$(getent  passwd $loginname|awk -F":" '{print $5}')
+                userlogin=$loginname;
 		
 		#Disable services for defined time
                 message="$userlogin aka $person Disabled Nagios SERVICE Alerts for $HOST_NAME for $input_time";
