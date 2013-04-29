@@ -11,7 +11,7 @@
 ###############################################################################
 # DOWNLOAD THIS SCRIPT AND PLACE IN: /etc/init.d/
 # chmod +x /etc/init.d/nagalert
-# sudo /sbin/chkservice nagalert on
+# sudo /sbin/chkconfig nagalert on
 # and enjoy !
 ##############################################################################
 # This program is free software: you can redistribute it and/or modify
