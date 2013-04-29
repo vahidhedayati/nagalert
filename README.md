@@ -28,7 +28,7 @@ for remote host
 The start process parses nagios html and tells you if it found the host in scheduled down time.
 
 
-Also check out https://github.com/vahidhedayati/nagios-disable-host-notifications to get notifications on hosts with disabled active/notification checks or scheduled down time
+Also check out https://github.com/vahidhedayati/nagios-disable-host-notification to get notifications on hosts with disabled active/notification checks or scheduled down time
 
 
 
