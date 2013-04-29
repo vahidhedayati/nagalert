@@ -25,54 +25,106 @@ username="nagiosadmin"
 password="password"
 naghost="nagios.your.server.com"
 
-input_time=$2;
-if [ "$input_time" == "" ]; then
-input_time=10M
-fi
 
-HOST_NAME=$3;
-if [ "$HOST_NAME" == "" ]; then
-	HOST_NAME=(`hostname -s`)
-fi
+val2=$2;
+val3=$3;
+
+RAND="$$";
+tmpfile="/tmp/nagios-status.html.$RAND"
+
+function init_stop() { 
+	input_time=$val2;
+	if [ "$input_time" == "" ]; then
+		input_time=10M
+	fi
+
+	HOST_NAME=$val3;
+	if [ "$HOST_NAME" == "" ]; then
+		HOST_NAME=(`hostname -s`)
+	fi
+
+	if [[ $input_time =~ D ]]; then
+        	input_time=$(echo $input_time|sed -e 's/D/ days/g')
+	elif [[ $input_time =~ M ]]; then
+        	input_time=$(echo $input_time|sed -e 's/M/ minutes/g')
+	elif [[ $input_time =~ H ]]; then
+        	input_time=$(echo $input_time|sed -e 's/H/ hours/g')
+	elif [[ $input_time =~ S ]]; then
+        	input_time=$(echo $input_time|sed -e 's/S/ SECONDS/g')
+	fi
+
+	amp="%%3A"
+	now=$(date +%m-%d-%Y"+"%H$amp%M$amp%S)
+	end=$(date +%m-%d-%Y"+"%H$amp%M$amp%S  -d "$input_time")
+}
+
+function init_start() { 
+	HOST_NAME=$val2;
+	if [ "$HOST_NAME" == "" ]; then
+		HOST_NAME=(`hostname -s`)
+	fi
+}
 
 
-if [[ $input_time =~ D ]]; then
-        input_time=$(echo $input_time|sed -e 's/D/ days/g')
-elif [[ $input_time =~ M ]]; then
-        input_time=$(echo $input_time|sed -e 's/M/ minutes/g')
-elif [[ $input_time =~ H ]]; then
-        input_time=$(echo $input_time|sed -e 's/H/ hours/g')
-elif [[ $input_time =~ S ]]; then
-        input_time=$(echo $input_time|sed -e 's/S/ SECONDS/g')
-fi
-
-amp="%%3A"
-now=$(date +%m-%d-%Y"+"%H$amp%M$amp%S)
-end=$(date +%m-%d-%Y"+"%H$amp%M$amp%S  -d "$input_time")
-
-
+function parseHTML() {
+	IFS=$'\n'
+	go=0;
+	start="<TABLE BORDER=0 CLASS='downtime'>";
+	fin="</TABLE>";
+	surl="http://$username:$password@"$naghost"/nagios/cgi-bin/cmd.cgi?cmd_typ=79&cmd_mod=2&down_id="
+	hurl="http://$username:$password@"$naghost"/nagios/cgi-bin/cmd.cgi?cmd_typ=78&cmd_mod=2&down_id="
+	wget -q "http://$username:$password@$naghost/nagios/cgi-bin/extinfo.cgi?type=6" -O $tmpfile
+	for lines in $(cat $tmpfile); do
+        	if [[ $lines =~ "$start" ]]; then go=1; fi
+        	if [[ $lines =~ "$fin" ]]; then go=0; fi
+        	if [[ $go == 1 ]]; then
+                	if [[ $lines =~ "$HOST_NAME</A>" ]]; then
+                        	if [[ $lines =~ "downtimeOdd" ]]; then
+                                	if [[ $lines =~ "service" ]]; then
+                                        	servicedownid=$(echo $lines|awk -F"downtimeOdd" '{print $12}'|awk -F">" '{print $2}'|awk -F"<" '{print $1}')
+						url="$surl$servicedownid"
+						echo "Enabling SERVICEID:$servicedownid Alert $url";
+						wget -O - -q -t 1 "$url" >/dev/null 2>&1
+                                	else
+                                       		hostdownid=$(echo $lines|awk -F"downtimeOdd" '{print $11}'|awk -F">" '{print $2}'|awk -F"<" '{print $1}')
+						url="$hurl$hostdownid"
+						echo "Enabling HOSTDOWNID:$hostdownid Alert $url";
+						wget -O - -q -t 1 "$url" >/dev/null 2>&1
+                                	fi
+                        	fi
+                        	if [[ $lines =~ "downtimeEven" ]]; then
+                                	servicedownid=$(echo $lines|awk -F"downtimeEven" '{print $12}'|awk -F">" '{print $2}'|awk -F"<" '{print $1}')
+					url="$surl$servicedownid"
+					echo "Enabling SERVICEID:$servicedownid Alert $url";
+					wget -O - -q -t 1 "$url" >/dev/null 2>&1
+                        	fi
+                	fi
+        	fi
+	done
+	rm $tmpfile
+}
 
 function usage() { 
- echo "$0  stop {10M|10H|10D) "
- echo "$0 start"
- echo "----------------------------------"
- echo "stop value ie 10S for 10 Seconds" 
- echo "stop value ie 10M for 10 Minutes"
- echo "stop value ie 10H for 10 Hours" 
- echo "stop value ie 10D for 10 Days" 
- echo "----------------------------------"
+ 	echo "$0  stop {10M|10H|10D)"
+ 	echo "$0 start "
+ 	echo "----------------------------------"
+ 	echo "stop value ie 10S for 10 Seconds" 
+ 	echo "stop value ie 10M for 10 Minutes"
+ 	echo "stop value ie 10H for 10 Hours" 
+ 	echo "stop value ie 10D for 10 Days" 
+ 	echo "----------------------------------"
 }
 
 
 case "$1" in
   start)
-        	echo "Enabling Nagios Alerts for $HOST_NAME";
-		url="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=17&cmd_mod=2&host=$HOST_NAME&start_time=$now&btnSubmit=Commit"
-		wget -O - -q -t 1 "$url" >/dev/null 2>&1
+		init_start;
+                echo "Enabling Nagios Alerts for $HOST_NAME";
+                parseHTML;
 		;;
   stop)
-		# If executed via crontab - logname will not have a value - this stops the script from working
-		# it now checks - if there is no value it will default user as root
+		init_stop;
+
 		echo $(logname)  | grep "[a-z]" > /dev/null
                 if [ $? = 0 ]; then
                         loginname=$(logname);
@@ -83,20 +135,16 @@ case "$1" in
                 person=$(getent  passwd $loginname|awk -F":" '{print $5}')
                 userlogin=$loginname;
 		
-		#Disable services for defined time
                 message="$userlogin aka $person Disabled Nagios SERVICE Alerts for $HOST_NAME for $input_time";
                 echo $message
 		url="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=86&cmd_mod=2&host=$HOST_NAME&com_data=$message&trigger=0&start_time=$now&end_time=$end&fixed=1&hours=0&minutes=0&btnSubmit=Commit"
 		wget -O - -q -t 1 "$url" >/dev/null 2>&1
-	
-		#Disable host alerts for defined time
 		message="$userlogin aka $person Disabled Nagios HOST Alert for $HOST_NAME for $input_time";
                 echo $message
 		url1="http://$username:$password@$naghost/nagios/cgi-bin/cmd.cgi?cmd_typ=55&cmd_mod=2&host=$HOST_NAME&com_data=$message&trigger=0&start_time=$now&end_time=$end&fixed=1&hours=0&minutes=0&childoptions=0&btnSubmit=Commit"
 		wget -O - -q -t 1 "$url1" >/dev/null 2>&1
 		 ;;
   *)
-
 	usage
 	exit 1
 esac
