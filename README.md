@@ -36,13 +36,13 @@ Also check out https://github.com/vahidhedayati/nagios-disable-host-notification
 
 Just executing the script returns:
 
-/etc/init.d/nagalert start 
-----------------------------------
-stop value ie 10S for 10 Seconds
-stop value ie 10M for 10 Minutes
-stop value ie 10H for 10 Hours
-stop value ie 10D for 10 Days
-----------------------------------
+        /etc/init.d/nagalert start 
+        ----------------------------------
+        stop value ie 10S for 10 Seconds
+        stop value ie 10M for 10 Minutes
+        stop value ie 10H for 10 Hours
+        stop value ie 10D for 10 Days
+        ----------------------------------
 
 Hmm looks like the usage needs updating lol
 
