@@ -86,11 +86,19 @@ function init_stop() {
 	fi
 	set_date
 	HOST_NAME=$val3;
+	# If no hostname set in either start/stop make it this host
+	if [ "$HOST_NAME" == "" ]; then
+		HOST_NAME=(`hostname -s`)
+	fi
 }
 
 # This initialises start variables
 function init_start() { 
 	HOST_NAME=$val2;
+	# If no hostname set in either start/stop make it this host
+	if [ "$HOST_NAME" == "" ]; then
+		HOST_NAME=(`hostname -s`)
+	fi
 }
 
 # This works out who is logged in - if not found it will use root
@@ -186,10 +194,7 @@ function usage() {
 }
 
 
-# If no hostname set in either start/stop make it this host
-if [ "$HOST_NAME" == "" ]; then
-	HOST_NAME=(`hostname -s`)
-fi
+
 
 
 # Main program case function
