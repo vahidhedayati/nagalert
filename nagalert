@@ -138,11 +138,18 @@ function parseHTML() {
                                 	fi
                         	fi
                         	if [[ $lines =~ "downtimeEven" ]]; then
-                                	servicedownid=$(echo $lines|awk -F"downtimeEven" '{print $12}'|awk -F">" '{print $2}'|awk -F"<" '{print $1}')
-					url="$surl$servicedownid"
-					echo "Enabling SERVICEID:$servicedownid Alert $url";
-					wget -O - -q -t 1 "$url" >/dev/null 2>&1
-                        	fi
+                                        if [[ $lines =~ "service" ]]; then
+                                                servicedownid=$(echo $lines|awk -F"downtimeEven" '{print $12}'|awk -F">" '{print $2}'|awk -F"<" '{print $1}')
+                                                url="$surl$servicedownid"
+                                                echo "Enabling SERVICEID:$servicedownid Alert $url";
+                                                wget -O - -q -t 1 "$url" >/dev/null 2>&1
+                                        else
+                                                hostdownid=$(echo $lines|awk -F"downtimeEven" '{print $11}'|awk -F">" '{print $2}'|awk -F"<" '{print $1}')
+                                                url="$hurl$hostdownid"
+                                                echo "Enabling HOSTDOWNID:$hostdownid Alert $url";
+                                                wget -O - -q -t 1 "$url" >/dev/null 2>&1
+                                        fi
+                                fi
                         else
 				return_string="No pattern matching $HOST_NAME was found on $naghost"
                 	fi
