@@ -82,7 +82,7 @@ sub gather_servers() {
     			push @hosts,"<option value=\"$host\">$host</option>\n";
 		}
 	}
-	print join(" ", uniq(@hosts)), "\n";
+	print sort(" ", uniq(@hosts)), "\n";
 	print "</select>\n";
 }
 sub gen_page() { 
