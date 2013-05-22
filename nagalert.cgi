@@ -6,6 +6,12 @@
 # Script must be made available in the cgi-bin folder of the host running nagios 
 # Ensure you configure the first two variables to match your current setup
 # status.dat and nagalert (bash script)
+# When you load up the page, you will see the first action which is to enable/disable alerts 
+# for selected hosts.
+# Once you have defined your action you can either select one host or use:
+# 1.  CTRL (selective multiple hosts, scroll down and select another whilst holding down control key)
+# 2. SHIFT (select lots of hosts that are next to each other)
+# Once selected If you are stopping define the time 1 - 24 then choose minutes, hours, days.
 ##############################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
