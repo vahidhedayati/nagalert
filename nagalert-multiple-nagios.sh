@@ -48,9 +48,6 @@ naghost="nagios_server1.yourdomain.com"
 base_url="http://"$username:$password"@"$naghost$nagios_url
 
 #####################################
-# Amount of arrays rows below
-X=2;
-
 # Environments or Data Centres
 s[1]="datacentre1";
 s[2]="datacentre2";
@@ -240,11 +237,13 @@ function stop_nagging() {
 
 
 function check_others()  {
-        for ((i=1; i <= $X; i++)); do
+         i=0;   
+         for datacentre in ${s[@]}; do
+                ((i++))
                 # For each array item expand members - these should map to each id above
-                datacentre=${s[$i]};
-                nagios_host=${u[$i]}
+                nagios_host=${u[$i]};
                 userpass=${up[$i]}
+
                 # Check to see if the current nagios host matches this host
                 # if it does no point in script checking itself and trying to take over its own config
                 if [[ $nagios_host =~ $naghost ]]; then
